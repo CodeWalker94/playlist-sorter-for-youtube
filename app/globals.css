@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
+/* =============================================
+   THEME VARIABLES
+   ============================================= */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0f0f0f;
+  --foreground: #f1f1f1;
+  --surface: #181818;
+  --surface-elevated: #212121;
+  --yt-red: #ff0000;
+  --yt-red-hover: #cc0000;
+  --muted: #aaaaaa;
+  --border: #303030;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-yt-red: var(--yt-red);
+  --color-yt-red-hover: var(--yt-red-hover);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* =============================================
+   GLOBAL BASE
+   ============================================= */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+}
+
+/* =============================================
+   COMPONENT CLASSES
+   ============================================= */
+
+/* --- Card
+   General purpose card (playlist cards, search result cards)
+   Usage: <div className="card"> */
+.card {
+  @apply bg-surface-elevated border border-border rounded-xl transition-all duration-200;
+}
+.card:hover {
+  @apply bg-surface shadow-[0_4px_24px_0_rgba(0,0,0,0.4)];
+}
+
+/* --- Tile
+   Horizontal layout card (video in a playlist — thumbnail left, info right)
+   Usage: <a className="tile"> — NOTE: use <a> as the tile so flex applies directly to children */
+.tile {
+  @apply flex flex-row items-center bg-surface rounded-lg p-2 transition-colors duration-200;
+}
+.tile:hover {
+  @apply bg-surface-elevated;
+}
+
+/* --- Thumbnail
+   Used on all images (playlist cover, video thumbnail)
+   Usage: <img className="thumbnail w-32 h-20" /> */
+.thumbnail {
+  @apply object-cover rounded-md bg-black/30 shrink-0;
+}
+
+/* --- Video Box
+   Wrapper around thumbnail — needs relative so duration-badge can position absolutely inside it
+   Usage: <div className="video-box"> */
+.video-box {
+  @apply relative shrink-0;
+}
+
+/* --- Info Box
+   Right-side info inside a tile or card
+   Usage: <div className="info-box"> */
+.info-box {
+  @apply ml-4 flex-1 flex flex-col justify-center min-w-0;
+}
+
+/* --- Playlist Card
+   Vertical card: thumbnail on top (with video count overlay), title/info below
+   Usage: <a className="card playlist-card"> */
+.playlist-card {
+  @apply w-full flex flex-col overflow-hidden cursor-pointer;
+}
+
+/* Wrapper around the thumbnail — needed for the video count overlay */
+.playlist-card-thumb {
+  @apply relative w-full aspect-video overflow-hidden;
+}
+.playlist-card-thumb img {
+  @apply w-full h-full object-cover;
+}
+
+/* Video count overlay — right side of thumbnail, like YouTube */
+.playlist-card-count {
+  @apply absolute right-0 top-0 bottom-0 w-1/4 bg-black/80 flex flex-col items-center justify-center gap-1 text-white text-xs font-semibold;
+}
+
+/* Info section below thumbnail */
+.playlist-card-info {
+  @apply p-3 flex flex-col gap-1;
+}
+
+/* --- Playlist Title Card
+   Big display at the top of an opened playlist view
+   Usage: <div className="playlist-title-card"> */
+.playlist-title-card {
+  @apply flex flex-col gap-6 rounded-2xl p-6 mb-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.5)];
+  background: linear-gradient(135deg, var(--surface-elevated), var(--surface));
+}
+@media (min-width: 768px) {
+  .playlist-title-card {
+    @apply flex-row items-center;
+  }
+}
+
+/* --- Pill
+   Sort/filter buttons (e.g. A-Z, Recently Added, Date)
+   Usage: <button className="pill"> or <button className="pill pill-active"> */
+.pill {
+  @apply inline-flex items-center px-4 py-1.5 rounded-full bg-surface-elevated text-muted border border-border text-sm font-medium cursor-pointer transition-all duration-200 whitespace-nowrap;
+}
+.pill:hover {
+  @apply bg-surface text-foreground;
+}
+.pill-active {
+  @apply bg-foreground text-background border-foreground;
+}
+
+/* --- Section Title
+   Page and section headings
+   Usage: <h2 className="section-title"> */
+.section-title {
+  @apply text-2xl font-bold mb-4;
+}
+
+/* --- Muted Text
+   Secondary/metadata text (views, date, channel)
+   Usage: <span className="muted"> */
+.muted {
+  @apply text-muted text-xs;
+}
+
+/* --- Duration Badge
+   Overlaid on thumbnails to show video length
+   Usage: <span className="duration-badge"> */
+.duration-badge {
+  @apply absolute bottom-1.5 right-1.5 bg-black/75 text-white text-xs font-semibold px-1.5 py-0.5 rounded;
 }
