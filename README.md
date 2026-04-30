@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Playlist Sorter
+
+> A personal dashboard for browsing, sorting, and curating YouTube playlists — built with Next.js 16, React 19, and the YouTube Data API v3.
+
+---
+
+## Overview
+
+YouTube's native interface doesn't let you sort your playlists alphabetically, filter by title, or save custom collections of videos across playlists. This app solves that.
+
+Sign in with Google, browse all your playlists, sort and search through videos, select the ones you want, and save them into your own curated playlists — all without touching YouTube directly.
+
+---
+
+## Features
+
+- **Google OAuth sign-in** with automatic access token refresh (no repeated logins)
+- **Account playlists** — full library loaded in the background, alphabetical sort auto-fetches all pages
+- **Playlist by URL** — paste any public YouTube playlist URL to load and sort its videos
+- **Video selection mode** — multi-select videos with checkboxes, select all, clear, and bulk actions
+- **Save to playlist** — create a new saved playlist or add to an existing one, with automatic duplicate prevention
+- **Saved playlists viewer** — browse saved collections in a dedicated page with sort, search, and select mode
+- **Sort persistence** — sort preference per playlist saved to `localStorage`
+- **Session cache** — playlist data cached in `sessionStorage` for fast revisits, refreshed on each page open
+
+---
+
+## Tech Stack
+
+| Layer     | Technology                                  |
+| --------- | ------------------------------------------- |
+| Framework | Next.js 16 (App Router)                     |
+| UI        | React 19, Tailwind CSS v4                   |
+| Auth      | NextAuth v4 (Google OAuth)                  |
+| Data      | YouTube Data API v3                         |
+| Language  | TypeScript                                  |
+| State     | React hooks + localStorage / sessionStorage |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone and install
+
+```bash
+git clone <your-repo-url>
+cd youtube-playlist-sorter-app
+npm install
+```
+
+### 2. Environment variables
+
+This app requires a Google OAuth client ID and secret (via NextAuth) and a YouTube Data API v3 key. Create a `.env.local` file with the appropriate values — these are not committed to the repo.
+
+### 3. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+app/
+  playlists/
+    page.tsx                  # Dashboard entry — Account / URL / Saved tabs
+    [id]/                     # YouTube playlist video viewer
+    saved/[id]/               # Saved playlist viewer
+lib/
+  hooks/
+    useAccountPlaylists.ts    # Fetches and caches signed-in user's playlists
+    usePlaylistVideos.ts      # Paginated video fetch with sessionStorage cache
+    useUrlPlaylists.ts        # Loads a playlist by pasted URL
+  API.ts                      # YouTube Data API v3 wrappers
+components/
+  Cards/VideoCard.tsx         # Vertical video card with selection mode
+  UI/SavePlaylistModal.tsx    # Create or add to saved playlist modal
+types/types.ts                # Shared TypeScript interfaces
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Key Decisions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **App Router over Pages Router** — colocated layouts, server components for metadata, client components for interactivity
+- **Token refresh in JWT callback** — users stay signed in across long sessions without re-authenticating
+- **`entryId` for playlist items** — YouTube allows the same video to appear multiple times in a playlist. Using the playlist item's own ID (`item.id`) as the React key prevents duplicate key bugs
+- **Sorted list requires full data** — YouTube's API returns playlists in its own order with no sort parameter. Switching to alphabetical triggers a `fetchAll()` to load every page before sorting
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## What I built
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project was built across several sessions focused on:
+
+- Setting up Google OAuth and handling long-lived sessions with refresh tokens
+- Working with paginated YouTube API responses
+- Building a reusable hook pattern for caching and loading state
+- Implementing multi-select UI with bulk actions
+- Managing cross-page state without a global store (localStorage + URL params)
+- Designing a clean dark UI with Tailwind v4 and custom CSS variables

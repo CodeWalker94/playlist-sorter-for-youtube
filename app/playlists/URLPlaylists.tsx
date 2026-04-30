@@ -85,7 +85,9 @@ const URLPlaylists = ({ playlistId }: { playlistId: string }) => {
       </div>
 
       {status === "loading" || isLoading ? (
-        <Loader />
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Loader />
+        </div>
       ) : error ? (
         <p className="error-text">{error}</p>
       ) : playlistId ? (

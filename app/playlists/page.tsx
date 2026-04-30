@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import AccountPlaylists from "./AccountPlaylists";
 import URLPlaylists from "./URLPlaylists";
-import CuratedPlaylists from "./CuratedPlaylists";
+import SavedPlaylists from "./SavedPlaylists";
 
 const PlaylistsPage = () => {
   const params = useSearchParams();
@@ -16,8 +16,8 @@ const PlaylistsPage = () => {
     content = <AccountPlaylists />;
   } else if (mode === "url") {
     content = <URLPlaylists playlistId={playlistId ?? ""} />;
-  } else if (mode === "curated") {
-    content = <CuratedPlaylists />;
+  } else if (mode === "saved") {
+    content = <SavedPlaylists />;
   }
 
   return (
@@ -25,7 +25,6 @@ const PlaylistsPage = () => {
       <div className="mb-8">
         <h1 className="section-heading">Your Playlists</h1>
       </div>
-      {/* TODO: {content} renders whichever view component matches the current mode */}
       {content}
     </div>
   );

@@ -1,3 +1,4 @@
+import React from "react";
 import Image from "next/image";
 import { formatViews, formatRelativeDate } from "@/lib/formatters";
 import { VideoCardProps } from "@/types/types";
@@ -16,7 +17,14 @@ const durationFormatter = (seconds: number): string => {
   return `${minute}:${second.toString().padStart(2, "0")}`;
 };
 
+type VideoCardWithSelectProps = VideoCardProps & {
+  isSelectMode?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string) => void;
+};
+
 const VideoCard = ({
+  entryId,
   id,
   title,
   channelTitle,
@@ -24,20 +32,37 @@ const VideoCard = ({
   duration,
   views,
   datePosted,
-}: VideoCardProps): JSX.Element => {
+  isSelectMode = false,
+  isSelected = false,
+  onSelect,
+}: VideoCardWithSelectProps): React.ReactElement => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (isSelectMode && onSelect) {
+      e.preventDefault();
+      onSelect(entryId);
+    }
+  };
+
   return (
     <a
       href={`https://www.youtube.com/watch?v=${id}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="tile"
+      className={`tile${isSelected ? " tile-selected" : ""}`}
+      onClick={handleClick}
     >
       <div className="video-box">
+        {isSelectMode && (
+          <div
+            className={`select-checkbox${isSelected ? " select-checkbox-checked" : ""}`}
+          >
+            {isSelected && <span>✓</span>}
+          </div>
+        )}
         <Image
           src={thumbnailUrl}
           alt={title}
-          width={160}
-          height={96}
+          fill
           className="thumbnail thumbnail-small"
         />
         <span className="duration-badge">{durationFormatter(duration)}</span>

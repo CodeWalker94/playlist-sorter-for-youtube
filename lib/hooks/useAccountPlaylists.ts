@@ -48,25 +48,26 @@ export const useAccountPlaylists = () => {
     const accessToken = session?.accessToken;
     if (status !== "authenticated" || !accessToken) return;
 
-    // Skip fetch if we already have cached data
-    if (playlists.length > 0) return;
-
     const controller = new AbortController();
     setIsLoading(true);
     setError(null);
 
     const loadPlaylists = async () => {
       try {
-        const response = await fetchMyPlaylists(accessToken);
-        const items: YTPlaylistItem[] = response.items ?? [];
-        const mapped = mapItems(items);
+        const all: PlaylistCardProps[] = [];
+        let cursor: string | undefined = undefined;
+        do {
+          if (controller.signal.aborted) return;
+          const response = await fetchMyPlaylists(accessToken, cursor);
+          const items: YTPlaylistItem[] = response.items ?? [];
+          all.push(...mapItems(items));
+          cursor = response.nextPageToken ?? undefined;
+        } while (cursor);
         if (!controller.signal.aborted) {
-          setPlaylists(mapped);
-          writeCache(mapped);
-          const token = response.nextPageToken ?? undefined;
-          setNextPageToken(token);
-          if (token) sessionStorage.setItem(TOKEN_KEY, token);
-          else sessionStorage.removeItem(TOKEN_KEY);
+          setPlaylists(all);
+          writeCache(all);
+          setNextPageToken(undefined);
+          sessionStorage.removeItem(TOKEN_KEY);
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -108,6 +109,31 @@ export const useAccountPlaylists = () => {
     }
   };
 
+  const fetchAll = async () => {
+    const accessToken = session?.accessToken;
+    if (!accessToken || isLoading) return;
+    setIsLoading(true);
+    let cursor = nextPageToken;
+    const accumulated: PlaylistCardProps[] = [];
+    try {
+      while (cursor) {
+        const response = await fetchMyPlaylists(accessToken, cursor);
+        const items: YTPlaylistItem[] = response.items ?? [];
+        accumulated.push(...mapItems(items));
+        cursor = response.nextPageToken ?? undefined;
+      }
+      const updated = [...playlists, ...accumulated];
+      setPlaylists(updated);
+      writeCache(updated);
+      setNextPageToken(undefined);
+      sessionStorage.removeItem(TOKEN_KEY);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load playlists");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     playlists,
     isLoading,
@@ -115,5 +141,6 @@ export const useAccountPlaylists = () => {
     status,
     hasMore: !!nextPageToken,
     loadMore,
+    fetchAll,
   };
 };

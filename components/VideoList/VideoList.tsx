@@ -3,31 +3,31 @@ import { VideoCardProps } from "@/types/types";
 
 type VideoListProps = {
   videos: VideoCardProps[];
-  query: string;
+  isSelectMode?: boolean;
+  selectedIds?: Set<string>;
+  onSelect?: (id: string) => void;
 };
 
-const VideoList = ({ videos, query }: VideoListProps) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredVideos = normalizedQuery
-    ? videos.filter((video) => {
-        const title = video.title.toLowerCase();
-        const channel = video.channelTitle.toLowerCase();
-        return (
-          title.includes(normalizedQuery) || channel.includes(normalizedQuery)
-        );
-      })
-    : videos;
-
+const VideoList = ({
+  videos,
+  isSelectMode = false,
+  selectedIds,
+  onSelect,
+}: VideoListProps) => {
   return (
     <div className="playlist-grid">
-      {filteredVideos.length === 0 ? (
-        <p className="text-muted">
-          {normalizedQuery
-            ? `No videos match "${query}".`
-            : "No videos available yet."}
-        </p>
+      {videos.length === 0 ? (
+        <p className="text-muted">No videos available.</p>
       ) : (
-        filteredVideos.map((video) => <VideoCard key={video.id} {...video} />)
+        videos.map((video) => (
+          <VideoCard
+            key={video.entryId}
+            {...video}
+            isSelectMode={isSelectMode}
+            isSelected={selectedIds?.has(video.entryId) ?? false}
+            onSelect={onSelect}
+          />
+        ))
       )}
     </div>
   );

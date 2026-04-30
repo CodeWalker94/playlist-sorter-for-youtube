@@ -8,12 +8,15 @@ import { useLocalStorageState } from "@/lib/hooks/useLocalStorageState";
 import Loader from "@/components/UI/Loader";
 
 const AccountPlaylists = () => {
-  const { playlists, isLoading, error, status, hasMore, loadMore } =
-    useAccountPlaylists();
+  const { playlists, isLoading, error, status } = useAccountPlaylists();
   const [sortMode, setSortMode] = useLocalStorageState(
     "sort-account-playlists",
     "recent",
   );
+
+  const handleSortChange = (value: string) => {
+    setSortMode(value as "recent" | "alphabetical");
+  };
 
   const sortedPlaylists = useMemo(() => {
     if (sortMode === "alphabetical") {
@@ -23,7 +26,11 @@ const AccountPlaylists = () => {
   }, [playlists, sortMode]);
 
   if (status === "loading") {
-    return <Loader />;
+    return (
+      <div className="page-section min-h-screen flex items-center justify-center px-6 text-center">
+        <Loader />
+      </div>
+    );
   }
 
   if (status === "unauthenticated") {
@@ -48,7 +55,7 @@ const AccountPlaylists = () => {
             { value: "recent", label: "Most recent" },
             { value: "alphabetical", label: "Alphabetical" },
           ]}
-          onChange={(value) => setSortMode(value as "recent" | "alphabetical")}
+          onChange={handleSortChange}
         />
       </div>
 
@@ -59,14 +66,6 @@ const AccountPlaylists = () => {
       </div>
 
       {isLoading && <Loader />}
-
-      {hasMore && !isLoading && (
-        <div className="flex justify-center mt-6">
-          <button className="chrome-btn chrome-btn-large" onClick={loadMore}>
-            Load More
-          </button>
-        </div>
-      )}
     </div>
   );
 };

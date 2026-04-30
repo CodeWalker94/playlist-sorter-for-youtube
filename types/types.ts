@@ -19,6 +19,7 @@ export interface YTPlaylistItem {
 }
 
 export interface VideoCardProps {
+  entryId: string;
   id: string;
   title: string;
   channelTitle: string;
@@ -26,4 +27,11 @@ export interface VideoCardProps {
   duration: number;
   views: number;
   datePosted: string;
+}
+
+export interface SavedPlaylist {
+  id: string;
+  title: string;
+  videos: VideoCardProps[];
+  createdAt: string;
 }

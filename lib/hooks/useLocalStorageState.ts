@@ -6,15 +6,10 @@ export const useLocalStorageState = (
   key: string,
   defaultValue: string,
 ): [string, (value: string) => void] => {
-  const [value, setValue] = useState(defaultValue);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(key);
-    if (stored) {
-      setValue(stored);
-    }
-  }, [key]);
+  const [value, setValue] = useState<string>(() => {
+    if (typeof window === "undefined") return defaultValue;
+    return window.localStorage.getItem(key) ?? defaultValue;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;

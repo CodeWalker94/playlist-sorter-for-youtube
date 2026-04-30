@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { VideoCardProps } from "@/types/types";
 import { fetchPlaylistVideos, fetchVideoDetails } from "@/lib/API";
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const cacheKey = (id: string) => `playlistVideos:${CACHE_VERSION}:${id}`;
 const tokenKey = (id: string) =>
   `playlistVideosNextPage:${CACHE_VERSION}:${id}`;
@@ -14,7 +14,12 @@ const readCache = (id: string): VideoCardProps[] => {
   if (typeof window === "undefined") return [];
   try {
     const raw = sessionStorage.getItem(cacheKey(id));
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as VideoCardProps[];
+    const hasEntryIds = parsed.every(
+      (item) => typeof item.entryId === "string",
+    );
+    return hasEntryIds ? parsed : [];
   } catch {
     return [];
   }
@@ -38,20 +43,36 @@ const parseDuration = (iso: string): number => {
   );
 };
 
-const mapVideoItems = (items: any[]): VideoCardProps[] =>
-  items.map((video: any) => {
-    const snippet = video.snippet || {};
-    const stats = video.statistics || {};
-    return {
-      id: video.id,
-      title: snippet.title || "",
-      channelTitle: snippet.channelTitle || "",
-      thumbnailUrl: snippet.thumbnails?.medium?.url || "",
-      duration: parseDuration(video.contentDetails?.duration || ""),
-      views: Number(stats.viewCount) || 0,
-      datePosted: snippet.publishedAt || "",
-    };
+const mapVideoItems = (
+  entries: Array<{ entryId: string; videoId: string }>,
+  details: any[],
+): VideoCardProps[] => {
+  const detailMap = new Map<string, any>();
+  details.forEach((video: any) => {
+    if (video?.id) {
+      detailMap.set(video.id, video);
+    }
   });
+
+  return entries
+    .map((entry) => {
+      const video = detailMap.get(entry.videoId);
+      if (!video) return null;
+      const snippet = video.snippet || {};
+      const stats = video.statistics || {};
+      return {
+        entryId: entry.entryId,
+        id: video.id,
+        title: snippet.title || "",
+        channelTitle: snippet.channelTitle || "",
+        thumbnailUrl: snippet.thumbnails?.medium?.url || "",
+        duration: parseDuration(video.contentDetails?.duration || ""),
+        views: Number(stats.viewCount) || 0,
+        datePosted: snippet.publishedAt || "",
+      };
+    })
+    .filter(Boolean) as VideoCardProps[];
+};
 
 export const usePlaylistVideos = (playlistId: string) => {
   const { data: session } = useSession();
@@ -72,28 +93,24 @@ export const usePlaylistVideos = (playlistId: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Get playlist items — fall back to API-key-only if token is expired (401)
-      let playlistRes: any;
-      try {
-        playlistRes = await fetchPlaylistVideos(playlistId, token, pageToken);
-      } catch (err) {
-        if (token && err instanceof Error && err.message.includes("401")) {
-          playlistRes = await fetchPlaylistVideos(
-            playlistId,
-            undefined,
-            pageToken,
-          );
-        } else {
-          throw err;
-        }
-      }
+      // 1. Get playlist items — requires auth for private/account playlists
+      // Do NOT fall back to API-key-only: private playlists return 404 without a token
+      const playlistRes = await fetchPlaylistVideos(
+        playlistId,
+        token,
+        pageToken,
+      );
       const items = playlistRes.items || [];
-      const videoIds = items
-        .map(
-          (item: any) =>
-            item.contentDetails?.videoId || item.snippet?.resourceId?.videoId,
-        )
-        .filter(Boolean);
+      const entries = items
+        .map((item: any) => {
+          const videoId =
+            item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
+          return videoId ? { entryId: item.id, videoId } : null;
+        })
+        .filter(Boolean) as Array<{ entryId: string; videoId: string }>;
+      const videoIds = Array.from(
+        new Set(entries.map((entry) => entry.videoId)),
+      );
 
       // 2. Get video details — same fallback pattern
       let detailsRes: any;
@@ -110,7 +127,7 @@ export const usePlaylistVideos = (playlistId: string) => {
         ? detailsRes
         : detailsRes.items || [];
 
-      const mapped = mapVideoItems(details);
+      const mapped = mapVideoItems(entries, details);
 
       // 3. Append or set, then cache
       setVideos((prev) => {
@@ -141,5 +158,70 @@ export const usePlaylistVideos = (playlistId: string) => {
     fetchPage(nextPageToken);
   };
 
-  return { videos, isLoading, error, hasMore: !!nextPageToken, loadMore };
+  // Fetches all remaining pages in sequence — used when a search query is active
+  const fetchAll = async () => {
+    if (isLoading || !nextPageToken) return;
+    setIsLoading(true);
+    setError(null);
+    let cursor: string | undefined = nextPageToken;
+    const accumulated: VideoCardProps[] = [];
+    try {
+      while (cursor) {
+        const playlistRes = await fetchPlaylistVideos(
+          playlistId,
+          token,
+          cursor,
+        );
+        const items = playlistRes.items || [];
+        const entries = items
+          .map((item: any) => {
+            const videoId =
+              item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
+            return videoId ? { entryId: item.id, videoId } : null;
+          })
+          .filter(Boolean) as Array<{ entryId: string; videoId: string }>;
+        const videoIds = Array.from(
+          new Set(entries.map((entry) => entry.videoId)),
+        );
+
+        if (videoIds.length > 0) {
+          let detailsRes: any;
+          try {
+            detailsRes = await fetchVideoDetails(videoIds, token);
+          } catch (err) {
+            if (token && err instanceof Error && err.message.includes("401")) {
+              detailsRes = await fetchVideoDetails(videoIds, undefined);
+            } else {
+              throw err;
+            }
+          }
+          const details = Array.isArray(detailsRes)
+            ? detailsRes
+            : detailsRes.items || [];
+          accumulated.push(...mapVideoItems(entries, details));
+        }
+        cursor = playlistRes.nextPageToken ?? undefined;
+      }
+      setVideos((prev) => {
+        const updated = [...prev, ...accumulated];
+        writeCache(playlistId, updated);
+        return updated;
+      });
+      setNextPageToken(undefined);
+      sessionStorage.removeItem(tokenKey(playlistId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load videos");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    videos,
+    isLoading,
+    error,
+    hasMore: !!nextPageToken,
+    loadMore,
+    fetchAll,
+  };
 };

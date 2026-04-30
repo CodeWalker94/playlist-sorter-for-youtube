@@ -14,7 +14,7 @@ const PlaylistsLayout = ({ children }: { children: React.ReactNode }) => {
               Account playlists
             </Link>
             <Link href="/playlists?mode=url" className="nav-link">
-              Playlist by URL
+              Playlists by URL
             </Link>
             <Link href="/playlists?mode=saved" className="nav-link">
               Saved playlists
