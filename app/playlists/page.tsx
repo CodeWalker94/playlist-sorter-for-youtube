@@ -1,22 +1,34 @@
-// Route: /playlists
-// This page displays the grid of all loaded or saved playlists.
+"use client";
+import { useSearchParams } from "next/navigation";
+import AccountPlaylists from "./AccountPlaylists";
+import URLPlaylists from "./URLPlaylists";
+import CuratedPlaylists from "./CuratedPlaylists";
 
-export default function PlaylistsPage() {
+const PlaylistsPage = () => {
+  const params = useSearchParams();
+  const mode = params.get("mode");
+  const playlistId = params.get("playlistId");
+
+  // TODO: replace null with a fallback component if you want a proper empty state
+  let content = null;
+
+  if (mode === "account") {
+    content = <AccountPlaylists />;
+  } else if (mode === "url") {
+    content = <URLPlaylists playlistId={playlistId ?? ""} />;
+  } else if (mode === "curated") {
+    content = <CuratedPlaylists />;
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-foreground mb-6">
-        Your Playlists
-      </h1>
-
-      {/* TODO: Add sort/filter controls here */}
-
-      {/* TODO: Build a PlaylistGrid component that:
-           - receives an array of playlists as props
-           - maps over them and renders a PlaylistCard for each
-           - PlaylistCard links to /playlists/[id]
-      */}
-
-      <p className="text-muted">No playlists loaded yet.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="section-heading">Your Playlists</h1>
+      </div>
+      {/* TODO: {content} renders whichever view component matches the current mode */}
+      {content}
     </div>
   );
-}
+};
+
+export default PlaylistsPage;

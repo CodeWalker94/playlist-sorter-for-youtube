@@ -31,15 +31,17 @@ const mockVideos = [
   },
 ];
 
-export default function DemoPage() {
+const DemoPage = () => {
   return (
-    <div className="p-8 text-foreground">
-      <h1 className="text-2xl font-bold mb-6">VideoCard Preview</h1>
-      <div className="grid grid-cols-3 gap-3.5">
+    <div className="page-section">
+      <h1 className="section-heading">VideoCard Preview</h1>
+      <div className="tile-grid">
         {mockVideos.map((video) => (
           <PlaylistCard key={video.id} {...video} />
         ))}
       </div>
     </div>
   );
-}
+};
+
+export default DemoPage;

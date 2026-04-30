@@ -4,14 +4,25 @@
    THEME VARIABLES
    ============================================= */
 :root {
-  --background: #0f0f0f;
-  --foreground: #f1f1f1;
-  --surface: #181818;
-  --surface-elevated: #212121;
+  /* Pure achromatic black base */
+  --background: #000000;
+  --surface: #0c0c0c;
+  --surface-elevated: #141414;
+  --foreground: #ffffff;
+  --muted: #666666;
+  --border: rgba(255, 255, 255, 0.1);
+
+  /* Chrome palette — pure white scale, no blue */
+  --chrome-bright: #ffffff;
+  --chrome-light: #e8e8e8;
+  --chrome-mid: #888888;
+  --chrome-dark: #333333;
+
+  /* Chrome border gradient stops */
+  --chrome-border-hi: rgba(255, 255, 255, 0.6);
+  --chrome-border-lo: rgba(255, 255, 255, 0.08);
   --yt-red: #ff0000;
-  --yt-red-hover: #cc0000;
-  --muted: #aaaaaa;
-  --border: #303030;
+  --yt-red-hover: #e10600;
 }
 
 @theme inline {
@@ -19,136 +30,863 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
-  --color-yt-red: var(--yt-red);
-  --color-yt-red-hover: var(--yt-red-hover);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-chrome-light: var(--chrome-light);
+  --color-chrome-mid: var(--chrome-mid);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /* =============================================
-   GLOBAL BASE
+   GLOBAL BASE — PURE BLACK + LUNAR WHITE BLOOM
    ============================================= */
 body {
-  background: var(--background);
+  background-color: #000000;
+  background-image: radial-gradient(
+    ellipse 70% 45% at 75% -8%,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(10, 10, 10, 0.98) 52%,
+    #000000 100%
+  );
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, sans-serif;
+  min-height: 100vh;
+}
+
+/* =============================================
+   CHROME BORDER UTILITIES
+   ============================================= */
+
+/* Standard chrome gradient border — works with any border-radius */
+.chrome-border {
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* Thicker chrome border for prominent elements */
+.chrome-border-thick {
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.75) 0%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* =============================================
+   CHROME CARD
+   Usage: <a className="chrome-card playlist-card">
+   ============================================= */
+.chrome-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(145deg, var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(255, 255, 255, 0.25) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Top-half gloss sheen */
+.chrome-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chrome-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.92),
+    0 0 28px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background-image:
+    linear-gradient(145deg, #1a1a1a, var(--surface-elevated)),
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0.08) 55%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+}
+
+/* =============================================
+   CHROME HEADER
+   Usage: add class="chrome-header" to <header>
+   ============================================= */
+.chrome-header {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 32px rgba(0, 0, 0, 0.9);
+}
+
+/* =============================================
+   CHROME BUTTON
+   Usage: <button className="chrome-btn header-action">
+   ============================================= */
+.chrome-btn {
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(160deg, var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  color: var(--chrome-light);
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.sort-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sort-label {
+  font-size: 0.95rem;
+  color: var(--foreground-muted);
+  font-weight: 600;
+}
+
+.sort-select {
+  min-width: 11rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.65rem 1.2rem 0.65rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--chrome-light);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.7) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) center,
+    calc(100% - 0.75rem) center;
+  background-size:
+    0.45rem 0.45rem,
+    0.45rem 0.45rem;
+  background-repeat: no-repeat;
+}
+
+.sort-select:hover,
+.sort-select:focus {
+  border-color: rgba(255, 255, 255, 0.22);
+  outline: none;
+}
+
+.chrome-btn:hover {
+  background-image:
+    linear-gradient(160deg, #1e1e1e, var(--surface-elevated)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0.2) 100%
+    );
+  color: var(--chrome-bright);
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 16px rgba(0, 0, 0, 0.7);
+}
+
+.chrome-btn-large {
+  padding: 0.95rem 1.75rem;
+}
+
+.chrome-btn-large:hover {
+  cursor: pointer;
+}
+
+/* =============================================
+   APPLICATION LAYOUT
+   ============================================= */
+.page-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 0 1rem;
+  gap: 2rem;
+  color: var(--foreground);
+}
+
+.page-intro {
+  text-align: center;
+  max-width: min(95vw, 72rem);
+  padding: 0 1rem;
+}
+
+.page-title {
+  font-size: clamp(5.5rem, 9vw, 10rem);
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  margin-bottom: 2rem;
+  max-width: 14ch;
+  margin-inline: auto;
+  margin-top: 6rem;
+}
+
+.page-copy,
+.section-copy {
+  color: var(--muted);
+  font-size: clamp(1rem, 1.05vw, 1.15rem);
+  max-width: 52rem;
+  margin-inline: auto;
+  line-height: 1.7;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+  max-width: 80rem;
+}
+
+@media (min-width: 768px) {
+  .panel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 3rem 2.5rem;
+  min-height: 24rem;
+  border-radius: 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-align: center;
+  color: var(--foreground);
+  margin-bottom: 5rem;
+}
+
+.panel-card-title {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.panel-card-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.thumbnail-small {
+  width: 10rem;
+  height: 6rem;
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.panel-card-copy {
+  color: var(--muted);
+  font-size: clamp(1rem, 1.1vw, 1.15rem);
+  line-height: 1.8;
+  margin: 0;
+  max-width: 34rem;
+}
+
+.button {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: clamp(1rem, 1.1vw, 1.05rem);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.button-primary {
+  background: var(--yt-red);
+  color: var(--foreground);
+}
+
+.button-primary:hover {
+  background: var(--yt-red-hover);
+}
+
+.button-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.button-secondary:hover {
+  background: var(--surface-elevated);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 0.8rem;
+  border-radius: 0.85rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+.form-input::placeholder {
+  color: var(--muted);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--yt-red);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.page-section {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: var(--foreground);
+}
+
+.section-heading {
+  font-size: clamp(1.75rem, 2vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: var(--foreground);
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+  .tile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .tile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.brand-link:hover {
+  opacity: 0.8;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+  color: var(--chrome-light);
+}
+
+.brand-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.header-spacer {
+  flex: 1;
+  margin: 0 2rem;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .header-spacer {
+    display: block;
+  }
+}
+
+.header-action {
+  padding: 0.5rem 1rem;
+}
+
+/* =============================================
+   TAB BAR
+   Usage: wrap buttons in <div className="tab-bar-track">
+          each button: className={`tab-btn ${active ? "tab-btn-active" : "tab-btn-inactive"}`}
+   ============================================= */
+.tab-bar-track {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px;
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(to bottom, #111111, #000000),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.32) 0%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    inset 0 2px 12px rgba(0, 0, 0, 0.9),
+    0 2px 16px rgba(0, 0, 0, 0.7);
+}
+
+.tab-btn {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+  min-width: 130px;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid rgba(200, 200, 225, 0.6);
+  outline-offset: 2px;
+}
+
+.tab-btn-active {
+  background: linear-gradient(to bottom, #e8e8f4 0%, #aaabb8 100%);
+  color: #08080e;
+  box-shadow:
+    0 2px 14px rgba(200, 200, 225, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* Gloss sheen on active tab */
+.tab-btn-active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.tab-btn-inactive {
+  background: transparent;
+  color: var(--chrome-mid);
+}
+
+.tab-btn-inactive:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--chrome-light);
 }
 
 /* =============================================
    COMPONENT CLASSES
    ============================================= */
 
-/* --- Card
-   General purpose card (playlist cards, search result cards)
-   Usage: <div className="card"> */
-.card {
-  @apply bg-surface-elevated border border-border rounded-xl transition-all duration-200;
-}
-.card:hover {
-  @apply bg-surface shadow-[0_4px_24px_0_rgba(0,0,0,0.4)];
-}
-
 /* --- Tile
    Horizontal layout card (video in a playlist — thumbnail left, info right)
-   Usage: <a className="tile"> — NOTE: use <a> as the tile so flex applies directly to children */
+   Usage: <a className="tile"> */
 .tile {
-  @apply flex flex-row items-center bg-surface rounded-lg p-2 transition-colors duration-200;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(var(--surface), var(--surface)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
+
 .tile:hover {
-  @apply bg-surface-elevated;
+  background-image:
+    linear-gradient(var(--surface-elevated), var(--surface-elevated)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.48) 0%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.75);
 }
 
-/* --- Thumbnail
-   Used on all images (playlist cover, video thumbnail)
-   Usage: <img className="thumbnail w-32 h-20" /> */
+/* --- Thumbnail */
 .thumbnail {
-  @apply object-cover rounded-md bg-black/30 shrink-0;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  background: rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
 }
 
-/* --- Video Box
-   Wrapper around thumbnail — needs relative so duration-badge can position absolutely inside it
-   Usage: <div className="video-box"> */
+/* --- Video Box */
 .video-box {
-  @apply relative shrink-0;
+  position: relative;
+  flex-shrink: 0;
 }
 
-/* --- Info Box
-   Right-side info inside a tile or card
-   Usage: <div className="info-box"> */
+/* --- Info Box */
 .info-box {
-  @apply ml-4 flex-1 flex flex-col justify-center min-w-0;
+  margin-left: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
 }
 
-/* --- Playlist Card
-   Vertical card: thumbnail on top (with video count overlay), title/info below
-   Usage: <a className="card playlist-card"> */
+/* --- Playlist Card */
 .playlist-card {
-  @apply w-full flex flex-col overflow-hidden cursor-pointer;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
 }
 
-/* Wrapper around the thumbnail — needed for the video count overlay */
 .playlist-card-thumb {
-  @apply relative w-full aspect-video overflow-hidden;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
 }
+
 .playlist-card-thumb img {
-  @apply w-full h-full object-cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-/* Video count overlay — right side of thumbnail, like YouTube */
+.chrome-card:hover .playlist-card-thumb img {
+  transform: scale(1.03);
+}
+
 .playlist-card-count {
-  @apply absolute right-0 top-0 bottom-0 w-1/4 bg-black/80 flex flex-col items-center justify-center gap-1 text-white text-xs font-semibold;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 28%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--chrome-light);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(6, 6, 14, 0.85);
+  backdrop-filter: blur(4px);
+  border-left: 1px solid rgba(200, 200, 220, 0.1);
 }
 
-/* Info section below thumbnail */
 .playlist-card-info {
-  @apply p-3 flex flex-col gap-1;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-/* --- Playlist Title Card
-   Big display at the top of an opened playlist view
-   Usage: <div className="playlist-title-card"> */
+/* --- Playlist Title Card */
 .playlist-title-card {
-  @apply flex flex-col gap-6 rounded-2xl p-6 mb-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.5)];
-  background: linear-gradient(135deg, var(--surface-elevated), var(--surface));
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(145deg, var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
 }
+
 @media (min-width: 768px) {
   .playlist-title-card {
-    @apply flex-row items-center;
+    flex-direction: row;
+    align-items: center;
   }
 }
 
 /* --- Pill
-   Sort/filter buttons (e.g. A-Z, Recently Added, Date)
+   Sort/filter chips
    Usage: <button className="pill"> or <button className="pill pill-active"> */
 .pill {
-  @apply inline-flex items-center px-4 py-1.5 rounded-full bg-surface-elevated text-muted border border-border text-sm font-medium cursor-pointer transition-all duration-200 whitespace-nowrap;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--surface-elevated), var(--surface-elevated)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  color: var(--muted);
 }
+
 .pill:hover {
-  @apply bg-surface text-foreground;
+  color: var(--chrome-light);
+  background-image:
+    linear-gradient(var(--surface), var(--surface)),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
 }
+
 .pill-active {
-  @apply bg-foreground text-background border-foreground;
+  background: linear-gradient(to bottom, #e0e0ec, #a8a8c0);
+  background-clip: padding-box;
+  border: none;
+  color: #08080e;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(200, 200, 225, 0.3);
 }
 
-/* --- Section Title
-   Page and section headings
-   Usage: <h2 className="section-title"> */
+/* --- Section Title */
 .section-title {
-  @apply text-2xl font-bold mb-4;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--chrome-light);
+  text-shadow: 0 1px 8px rgba(200, 200, 220, 0.2);
 }
 
-/* --- Muted Text
-   Secondary/metadata text (views, date, channel)
-   Usage: <span className="muted"> */
+/* --- Muted Text */
 .muted {
-  @apply text-muted text-xs;
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 
-/* --- Duration Badge
-   Overlaid on thumbnails to show video length
-   Usage: <span className="duration-badge"> */
+/* --- Duration Badge */
 .duration-badge {
-  @apply absolute bottom-1.5 right-1.5 bg-black/75 text-white text-xs font-semibold px-1.5 py-0.5 rounded;
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fadein {
+  animation: fadein 0.3s ease;
+}
+
+/* =============================================
+   LAYOUT UTILITIES
+   ============================================= */
+
+/* Playlist card grid — 1 col mobile, 2 col tablet, 3 col desktop */
+.playlist-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .playlist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .playlist-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Playlists dashboard — sidebar + main content two-column layout */
+.playlist-layout {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .playlist-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+}
+
+/* Sidebar panel */
+.sidebar {
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Sidebar nav list */
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Sidebar nav link */
+.nav-link {
+  display: block;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.nav-link:hover {
+  background: var(--muted);
+}
+
+/* Label in all-caps with wide tracking */
+.label-caps {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+}
+
+/* Error state text */
+.error-text {
+  color: #ef4444;
 }

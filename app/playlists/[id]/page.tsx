@@ -1,29 +1,51 @@
-// Route: /playlists/[id]
-// Shows all videos inside a specific playlist with search and filter.
+import Search from "@/components/Search/Search";
+import { fetchYoutubeData, fetchYoutubeAccountData } from "@/lib/API";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import PlaylistVideosClient from "./PlaylistVideosClient";
 
-// In Next.js 15+, params is a Promise — always await it.
 interface PlaylistPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ query?: string }>;
 }
 
-export default async function PlaylistPage({ params }: PlaylistPageProps) {
+const PlaylistPage = async ({ params, searchParams }: PlaylistPageProps) => {
   const { id } = await params;
+  const { query = "" } = await searchParams;
+
+  // Fetch the playlist title server-side only
+  const session = await getServerSession(authOptions);
+  const token = session?.accessToken;
+
+  let playlistTitle = "Playlist";
+  try {
+    const playlistMetaEndpoint = `/playlists?part=snippet&id=${id}`;
+    let playlistMetaRes: { items?: Array<{ snippet?: { title?: string } }> };
+    try {
+      playlistMetaRes = token
+        ? await fetchYoutubeAccountData(playlistMetaEndpoint, token)
+        : await fetchYoutubeData(playlistMetaEndpoint);
+    } catch (err) {
+      if (token && err instanceof Error && err.message.includes("401")) {
+        playlistMetaRes = await fetchYoutubeData(playlistMetaEndpoint);
+      } else {
+        throw err;
+      }
+    }
+    playlistTitle = playlistMetaRes.items?.[0]?.snippet?.title || "Playlist";
+  } catch (err) {
+    console.error("[PlaylistPage] Failed to fetch playlist title:", err);
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Playlist</h1>
-      <p className="text-muted text-sm mb-6">ID: {id}</p>
+    <div className="page-section">
+      <h1 className="section-heading">{playlistTitle}</h1>
+      <Search />
 
-      {/* TODO: Build SearchBar component (must be "use client" — needs useState) */}
-
-      {/* TODO: Build VideoList component that:
-           - receives an array of videos as props
-           - filters them based on the search query
-           - maps over filtered results and renders a VideoCard for each
-           - VideoCard links out to the actual YouTube video URL
-      */}
-
-      <p className="text-muted">Loading videos...</p>
+      {/* Video fetching, pagination, and filtering are all handled client-side */}
+      <PlaylistVideosClient playlistId={id} query={query} />
     </div>
   );
-}
+};
+
+export default PlaylistPage;
