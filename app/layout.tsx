@@ -31,6 +31,7 @@ const RootLayout = ({
           <footer className="app-footer">
             <span>© {new Date().getFullYear()} PlaylistSorter for YouTube</span>
             <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/tos">Terms of Service</Link>
           </footer>
         </Providers>
       </body>
