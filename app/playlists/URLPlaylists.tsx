@@ -36,7 +36,7 @@ const URLPlaylists = ({
     }
   }, [playlistId, pathname, router]);
 
-  const { playlists, isLoading, error, status } = useUrlPlaylists(playlistId);
+  const { playlists, isLoading, error } = useUrlPlaylists(playlistId);
 
   const filteredPlaylists = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -88,7 +88,7 @@ const URLPlaylists = ({
         />
       </div>
 
-      {status === "loading" || isLoading ? (
+      {isLoading ? (
         <div className="min-h-[60vh] flex items-center justify-center">
           <Loader />
         </div>
