@@ -2,38 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 type SearchProps = {
   placeholder?: string;
   queryParam?: string;
+  onChange?: (value: string) => void;
 };
 
 const Search = ({
   placeholder = "Search videos...",
   queryParam = "query",
+  onChange,
 }: SearchProps) => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const currentQuery = searchParams.get(queryParam) ?? "";
-  const [value, setValue] = useState(currentQuery);
+  const [value, setValue] = useState(() =>
+    onChange ? "" : (searchParams.get(queryParam) ?? ""),
+  );
+  const debouncedValue = useDebounce(value, 300);
 
   useEffect(() => {
-    setValue(currentQuery);
-  }, [currentQuery]);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const next = event.target.value;
-    setValue(next);
-
-    const params = new URLSearchParams(searchParams);
-    if (next) {
-      params.set(queryParam, next);
+    if (onChange) {
+      onChange(debouncedValue);
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedValue) {
+      params.set(queryParam, debouncedValue);
     } else {
       params.delete(queryParam);
     }
-
     router.replace(`${pathname}?${params.toString()}`);
+  }, [debouncedValue, pathname, queryParam, router, searchParams, onChange]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(event.target.value);
   };
 
   return (

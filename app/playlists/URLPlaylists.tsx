@@ -7,16 +7,15 @@ import SortDropdown from "@/components/UI/SortDropdown";
 import { useUrlPlaylists } from "@/lib/hooks/useUrlPlaylists";
 import { useLocalStorageState } from "@/lib/hooks/useLocalStorageState";
 import Loader from "@/components/UI/Loader";
+import { parsePlaylistId } from "@/lib/formatters";
 
-const parsePlaylistId = (url: string) => {
-  try {
-    return new URL(url).searchParams.get("list") || "";
-  } catch {
-    return "";
-  }
-};
-
-const URLPlaylists = ({ playlistId }: { playlistId: string }) => {
+const URLPlaylists = ({
+  playlistId,
+  query = "",
+}: {
+  playlistId: string;
+  query?: string;
+}) => {
   const router = useRouter();
   const pathname = usePathname();
   const [sortMode, setSortMode] = useLocalStorageState(
@@ -40,10 +39,15 @@ const URLPlaylists = ({ playlistId }: { playlistId: string }) => {
   const { playlists, isLoading, error, status } = useUrlPlaylists(playlistId);
 
   const filteredPlaylists = useMemo(() => {
-    return sortMode === "alphabetical"
-      ? [...playlists].sort((a, b) => a.title.localeCompare(b.title))
+    const q = query.trim().toLowerCase();
+    let list = q
+      ? playlists.filter((p) => p.title.toLowerCase().includes(q))
       : playlists;
-  }, [playlists, sortMode]);
+    if (sortMode === "alphabetical") {
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return list;
+  }, [playlists, sortMode, query]);
 
   const handleLoad = () => {
     const id = parsePlaylistId(urlValue);
@@ -91,11 +95,15 @@ const URLPlaylists = ({ playlistId }: { playlistId: string }) => {
       ) : error ? (
         <p className="error-text">{error}</p>
       ) : playlistId ? (
-        <div className="playlist-grid">
-          {filteredPlaylists.map((playlist) => (
-            <PlaylistCard key={playlist.id} {...playlist} />
-          ))}
-        </div>
+        filteredPlaylists.length === 0 ? (
+          <p className="muted">No playlists match your search.</p>
+        ) : (
+          <div className="playlist-grid">
+            {filteredPlaylists.map((playlist) => (
+              <PlaylistCard key={playlist.id} {...playlist} />
+            ))}
+          </div>
+        )
       ) : null}
     </div>
   );

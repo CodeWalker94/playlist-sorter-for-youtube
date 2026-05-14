@@ -7,16 +7,11 @@ const PlaylistCard = ({
   title,
   thumbnailUrl,
   videos,
-}: PlaylistCardProps): JSX.Element => {
+}: PlaylistCardProps) => {
   return (
     <Link href={`/playlists/${id}`} className="chrome-card playlist-card">
       <div className="playlist-card-thumb">
-        <Image
-          src={thumbnailUrl}
-          alt={title}
-          fill
-          style={{ objectFit: "cover" }}
-        />
+        <Image src={thumbnailUrl} alt={title} fill className="object-cover" />
         <div className="playlist-card-count">
           <span>{videos}</span>
           <span>videos</span>

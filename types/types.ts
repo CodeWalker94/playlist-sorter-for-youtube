@@ -35,3 +35,21 @@ export interface SavedPlaylist {
   videos: VideoCardProps[];
   createdAt: string;
 }
+
+export interface YTVideoItem {
+  id: string;
+  snippet: {
+    title: string;
+    channelTitle: string;
+    publishedAt: string;
+    thumbnails: {
+      medium?: { url: string };
+    };
+  };
+  contentDetails: {
+    duration: string;
+  };
+  statistics: {
+    viewCount?: string;
+  };
+}

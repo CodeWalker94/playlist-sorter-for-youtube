@@ -1,7 +1,6 @@
 import Search from "@/components/Search/Search";
 import { fetchYoutubeData, fetchYoutubeAccountData } from "@/lib/API";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import PlaylistVideosClient from "./PlaylistVideosClient";
 
 interface PlaylistPageProps {
@@ -14,8 +13,16 @@ const PlaylistPage = async ({ params, searchParams }: PlaylistPageProps) => {
   const { query = "" } = await searchParams;
 
   // Fetch the playlist title server-side only
-  const session = await getServerSession(authOptions);
-  const token = session?.accessToken;
+  const { userId } = await auth();
+  let token: string | undefined;
+  if (userId) {
+    const client = await clerkClient();
+    const oauthRes = await client.users.getUserOauthAccessToken(
+      userId,
+      "oauth_google",
+    );
+    token = oauthRes.data[0]?.token;
+  }
 
   let playlistTitle = "Playlist";
   try {

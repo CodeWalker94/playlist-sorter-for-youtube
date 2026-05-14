@@ -7,23 +7,23 @@ import { useAccountPlaylists } from "@/lib/hooks/useAccountPlaylists";
 import { useLocalStorageState } from "@/lib/hooks/useLocalStorageState";
 import Loader from "@/components/UI/Loader";
 
-const AccountPlaylists = () => {
+const AccountPlaylists = ({ query = "" }: { query?: string }) => {
   const { playlists, isLoading, error, status } = useAccountPlaylists();
   const [sortMode, setSortMode] = useLocalStorageState(
     "sort-account-playlists",
     "recent",
   );
 
-  const handleSortChange = (value: string) => {
-    setSortMode(value as "recent" | "alphabetical");
-  };
-
   const sortedPlaylists = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let list = q
+      ? playlists.filter((p) => p.title.toLowerCase().includes(q))
+      : playlists;
     if (sortMode === "alphabetical") {
-      return [...playlists].sort((a, b) => a.title.localeCompare(b.title));
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     }
-    return playlists;
-  }, [playlists, sortMode]);
+    return list;
+  }, [playlists, sortMode, query]);
 
   if (status === "loading") {
     return (
@@ -55,15 +55,19 @@ const AccountPlaylists = () => {
             { value: "recent", label: "Most recent" },
             { value: "alphabetical", label: "Alphabetical" },
           ]}
-          onChange={handleSortChange}
+          onChange={(value) => setSortMode(value as "recent" | "alphabetical")}
         />
       </div>
 
-      <div className="playlist-grid">
-        {sortedPlaylists.map((playlist) => (
-          <PlaylistCard key={playlist.id} {...playlist} />
-        ))}
-      </div>
+      {sortedPlaylists.length === 0 ? (
+        <p className="muted">No playlists match your search.</p>
+      ) : (
+        <div className="playlist-grid">
+          {sortedPlaylists.map((playlist) => (
+            <PlaylistCard key={playlist.id} {...playlist} />
+          ))}
+        </div>
+      )}
 
       {isLoading && <Loader />}
     </div>

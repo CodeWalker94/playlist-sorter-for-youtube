@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header/Header";
 import Providers from "@/components/Providers";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,7 +11,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "YouTube Playlist Sorter",
+  title: "PlaylistSorter for YouTube",
   description: "Search, filter, and sort your YouTube playlists",
 };
 
@@ -27,6 +28,10 @@ const RootLayout = ({
         <Providers>
           <Header />
           <main>{children}</main>
+          <footer className="app-footer">
+            <span>© {new Date().getFullYear()} PlaylistSorter for YouTube</span>
+            <Link href="/privacy">Privacy Policy</Link>
+          </footer>
         </Providers>
       </body>
     </html>

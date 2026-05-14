@@ -1016,3 +1016,175 @@ body {
   gap: 16px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
 }
+
+/* =============================================
+   DANGER BUTTON — for destructive actions
+   ============================================= */
+.chrome-btn-danger {
+  color: #ff6b6b;
+  border-color: rgba(255, 100, 100, 0.3);
+}
+
+.chrome-btn-danger:hover {
+  color: #ff4444;
+  border-color: rgba(255, 68, 68, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 68, 68, 0.15);
+}
+
+/* =============================================
+   TOAST BANNER — auto-dismissing notification
+   ============================================= */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--foreground);
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  z-index: 300;
+  white-space: nowrap;
+  animation: toast-in 0.2s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* =============================================
+   PLAYLIST CARD — disable hover lift/glow
+   The video tile (.tile) keeps its own hover.
+   ============================================= */
+.playlist-card {
+  transition: none;
+}
+
+.playlist-card:hover {
+  transform: none;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background-image:
+    linear-gradient(145deg, var(--surface-elevated), var(--surface)),
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(255, 255, 255, 0.25) 100%
+    );
+}
+
+.chrome-card:hover .playlist-card-thumb img {
+  transform: none;
+}
+
+/* =============================================
+   APP FOOTER
+   ============================================= */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: auto;
+}
+
+.app-footer a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-footer a:hover {
+  color: var(--chrome-light);
+}
+
+/* =============================================
+   PRIVACY PAGE
+   ============================================= */
+.privacy-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.privacy-updated {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.privacy-section {
+  margin-bottom: 2rem;
+}
+
+.privacy-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--chrome-light);
+  margin-bottom: 0.5rem;
+}
+
+.privacy-section p,
+.privacy-section li {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.privacy-section ul {
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.privacy-section a {
+  color: var(--focus-border);
+  text-decoration: none;
+}
+
+.privacy-section a:hover {
+  text-decoration: underline;
+}
+
+.privacy-section code {
+  font-size: 0.8rem;
+  background: var(--surface-elevated);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  color: var(--chrome-light);
+}
+
+.privacy-back {
+  margin-top: 3rem;
+}
+
+.privacy-back a {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.privacy-back a:hover {
+  color: var(--chrome-light);
+}

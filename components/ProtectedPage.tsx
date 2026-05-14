@@ -1,12 +1,15 @@
-import { useSession } from "next-auth/react";
+"use client";
+
+import { useAuth, useUser } from "@clerk/nextjs";
 
 const ProtectedPage = () => {
-  const { data: session, status } = useSession();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
 
-  if (status === "loading") return <div>Loading...</div>;
-  if (!session) return <div>Please sign in</div>;
+  if (!isLoaded) return <div>Loading...</div>;
+  if (!isSignedIn) return <div>Please sign in</div>;
 
-  return <div>Welcome, {session.user?.name}!</div>;
+  return <div>Welcome, {user?.fullName}!</div>;
 };
 
 export default ProtectedPage;

@@ -55,3 +55,16 @@ export const formatRelativeDate = (dateString: string): string => {
   if (minutes >= 1) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
   return "Just now";
 };
+
+/**
+ * parsePlaylistId
+ * Extracts the YouTube playlist ID from a full URL string.
+ * Returns an empty string if the URL is invalid or has no list param.
+ */
+export const parsePlaylistId = (url: string): string => {
+  try {
+    return new URL(url).searchParams.get("list") ?? "";
+  } catch {
+    return "";
+  }
+};

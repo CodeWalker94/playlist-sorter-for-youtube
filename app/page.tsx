@@ -1,32 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-
-
-const parsePlaylistId = (url: string) => {
-  try {
-    return new URL(url).searchParams.get("list") || "";
-  } catch {
-    return "";
-  }
-};
+import { useAuth, SignInButton } from "@clerk/nextjs";
+import { parsePlaylistId } from "@/lib/formatters";
 
 const HomePage = () => {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [url, setUrl] = useState("");
 
-  const handleAccountLink = () => {
-    signIn("google", {callbackUrl: "/playlists?mode=account" } )
-  }
+  // Redirect already-authenticated users straight to their dashboard
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace("/playlists?mode=account");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const handleLoad = () => {
     const id = parsePlaylistId(url);
-     if (id) router.push(`/playlists?mode=url&playlistId=${id}`);
-
-
-  }
+    if (id) router.push(`/playlists?mode=url&playlistId=${id}`);
+  };
   return (
     <div className="page-root">
       <div className="page-intro">
@@ -46,7 +40,11 @@ const HomePage = () => {
             Sign in with Google to load and save all your YouTube playlists.
           </p>
           {/* TODO: Wire to Google OAuth — you'll build this */}
-          <button className="button button-primary" onClick={handleAccountLink}>Connect YouTube Account</button>
+          <SignInButton mode="modal" forceRedirectUrl="/playlists?mode=account">
+            <button className="button button-primary">
+              Connect YouTube Account
+            </button>
+          </SignInButton>
         </div>
 
         {/* Panel 2 — Paste URL */}
@@ -67,7 +65,9 @@ const HomePage = () => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
-          <button className="button button-secondary" onClick={handleLoad}>Load Playlist</button>
+          <button className="button button-secondary" onClick={handleLoad}>
+            Load Playlist
+          </button>
         </div>
       </div>
     </div>

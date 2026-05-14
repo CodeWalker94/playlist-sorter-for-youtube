@@ -7,6 +7,7 @@ import SortDropdown from "@/components/UI/SortDropdown";
 import SavePlaylistModal from "@/components/UI/SavePlaylistModal";
 import VideoList from "@/components/VideoList/VideoList";
 import Loader from "@/components/UI/Loader";
+import Toast from "@/components/UI/Toast";
 import { SavedPlaylist } from "@/types/types";
 
 type PlaylistVideosClientProps = {
@@ -30,6 +31,7 @@ const PlaylistVideosClient = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
+  const [toastMessage, setToastMessage] = useState("");
 
   const loadSavedPlaylists = () => {
     try {
@@ -118,6 +120,9 @@ const PlaylistVideosClient = ({
     setShowModal(false);
     setSelectMode(false);
     clearSelection();
+    setToastMessage(
+      targetPlaylistId ? "Videos added to playlist." : `"${title}" saved.`,
+    );
   };
 
   if (error) return <p className="error-text">{error}</p>;
@@ -216,6 +221,10 @@ const PlaylistVideosClient = ({
           onSave={handleSave}
           onCancel={() => setShowModal(false)}
         />
+      )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage("")} />
       )}
     </div>
   );

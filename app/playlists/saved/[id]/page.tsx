@@ -1,18 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { SavedPlaylist } from "@/types/types";
 import { useLocalStorageState } from "@/lib/hooks/useLocalStorageState";
 import SortDropdown from "@/components/UI/SortDropdown";
 import SavePlaylistModal from "@/components/UI/SavePlaylistModal";
 import VideoList from "@/components/VideoList/VideoList";
+import Toast from "@/components/UI/Toast";
+
 
 export default function SavedPlaylistPage() {
   const { id } = useParams<{ id: string }>();
-  const [playlist, setPlaylist] = useState<SavedPlaylist | null | "loading">(
-    "loading",
-  );
+  const [playlist, setPlaylist] = useState<SavedPlaylist | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem("saved-playlists");
+      const playlists: SavedPlaylist[] = raw ? JSON.parse(raw) : [];
+      return playlists.find((p) => p.id === id) ?? null;
+    } catch {
+      return null;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useLocalStorageState(
     `sort-saved-${id}`,
@@ -21,19 +30,10 @@ export default function SavedPlaylistPage() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("saved-playlists");
-      const playlists: SavedPlaylist[] = raw ? JSON.parse(raw) : [];
-      setPlaylist(playlists.find((p) => p.id === id) ?? null);
-    } catch {
-      setPlaylist(null);
-    }
-  }, [id]);
+  const [toastMessage, setToastMessage] = useState("");
 
   const displayedVideos = useMemo(() => {
-    if (!playlist || playlist === "loading") return [];
+    if (!playlist) return [];
     const q = searchQuery.trim().toLowerCase();
     let list = q
       ? playlist.videos.filter(
@@ -66,8 +66,8 @@ export default function SavedPlaylistPage() {
     clearSelection();
   };
 
-  const handleSave = (title: string) => {
-    if (!playlist || playlist === "loading") return;
+  const handleSave = (_targetPlaylistId: string | null, title: string) => {
+    if (!playlist) return;
     const selectedVideos = playlist.videos.filter((v) =>
       selectedIds.has(v.entryId),
     );
@@ -89,14 +89,40 @@ export default function SavedPlaylistPage() {
     setShowModal(false);
     setSelectMode(false);
     clearSelection();
+    setToastMessage(`"${title}" saved.`);
   };
 
-  if (playlist === "loading") return null;
+  const handleRemoveSelected = () => {
+    if (!playlist) return;
+    const updated: SavedPlaylist = {
+      ...playlist,
+      videos: playlist.videos.filter((v) => !selectedIds.has(v.entryId)),
+    };
+    try {
+      const existing: SavedPlaylist[] = JSON.parse(
+        localStorage.getItem("saved-playlists") ?? "[]",
+      );
+      localStorage.setItem(
+        "saved-playlists",
+        JSON.stringify(
+          existing.map((p) => (p.id === playlist.id ? updated : p)),
+        ),
+      );
+    } catch {}
+    setPlaylist(updated);
+    setSelectMode(false);
+    clearSelection();
+    setToastMessage(
+      `${selectedIds.size} video${selectedIds.size !== 1 ? "s" : ""} removed.`,
+    );
+  };
+
   if (!playlist) return <p className="text-muted">Playlist not found.</p>;
 
   return (
     <div className="page-section">
       <h1 className="section-heading">{playlist.title}</h1>
+
 
       {/* Search */}
       <div className="relative flex items-center mb-6">
@@ -159,6 +185,13 @@ export default function SavedPlaylistPage() {
                 Clear
               </button>
               <button
+                className="chrome-btn chrome-btn-danger"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.85rem" }}
+                onClick={handleRemoveSelected}
+              >
+                Remove from playlist
+              </button>
+              <button
                 className="chrome-btn"
                 style={{
                   padding: "0.4rem 1rem",
@@ -184,9 +217,14 @@ export default function SavedPlaylistPage() {
       {showModal && (
         <SavePlaylistModal
           videoCount={selectedIds.size}
+          existingPlaylists={[]}
           onSave={handleSave}
           onCancel={() => setShowModal(false)}
         />
+      )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage("")} />
       )}
     </div>
   );

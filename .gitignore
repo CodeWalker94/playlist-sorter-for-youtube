@@ -43,3 +43,6 @@ client_credentials.json
 *.tsbuildinfo
 next-env.d.ts
 nul
+
+# personal dev notes — not for repo
+/notes
