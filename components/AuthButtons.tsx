@@ -1,21 +1,14 @@
 "use client";
 
-import { SignInButton, UserButton, Show } from "@clerk/nextjs";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 const AuthButtons = () => {
-  return (
-    <>
-      <Show when="signed-out">
-        <SignInButton mode="modal">
-          <button className="chrome-btn header-action cursor-pointer">
-            Sign in with Google
-          </button>
-        </SignInButton>
-      </Show>
-      <Show when="signed-in">
-        <UserButton />
-      </Show>
-    </>
+  const { data: session } = useSession();
+
+  return session ? (
+    <button className="chrome-btn header-action cursor-pointer" onClick={() => signOut()}>Sign out</button>
+  ) : (
+    <button className="chrome-btn header-action cursor-pointer" onClick={() => signIn("google")}>Sign in with Google</button>
   );
 };
 

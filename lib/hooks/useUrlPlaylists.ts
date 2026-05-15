@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { PlaylistCardProps, YTPlaylistItem } from "@/types/types";
 import { fetchPlaylistById } from "@/lib/API";
 
 export const useUrlPlaylists = (playlistId: string) => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { data: session, status } = useSession();
   const [playlists, setPlaylists] = useState<PlaylistCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,5 +41,5 @@ export const useUrlPlaylists = (playlistId: string) => {
     loadPlaylist();
     return () => controller.abort();
   }, [playlistId]);
-  return { playlists, isLoading, error, isSignedIn, isLoaded };
+  return { playlists, isLoading, error, status, isSignedIn: !!session };
 };

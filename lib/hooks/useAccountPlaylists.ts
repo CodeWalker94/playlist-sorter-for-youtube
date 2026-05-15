@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { useYouTubeToken } from "@/lib/hooks/useYouTubeToken";
+import { useSession } from "next-auth/react";
 import { PlaylistCardProps, YTPlaylistItem } from "@/types/types";
 import { fetchMyPlaylists } from "@/lib/API";
 
 const CACHE_KEY = "accountPlaylists";
+const TOKEN_KEY = "accountPlaylistsNextPage";
 
 const readCache = (): PlaylistCardProps[] => {
   if (typeof window === "undefined") return [];
@@ -24,13 +24,17 @@ const writeCache = (data: PlaylistCardProps[]) => {
 };
 
 export const useAccountPlaylists = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { token: accessToken } = useYouTubeToken();
+  const { data: session, status } = useSession();
   const [playlists, setPlaylists] = useState<PlaylistCardProps[]>(() =>
     readCache(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>(() =>
+    typeof window !== "undefined"
+      ? (sessionStorage.getItem(TOKEN_KEY) ?? undefined)
+      : undefined,
+  );
 
   const mapItems = (items: YTPlaylistItem[]): PlaylistCardProps[] =>
     items.map((item) => ({
@@ -41,7 +45,8 @@ export const useAccountPlaylists = () => {
     }));
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !accessToken) return;
+    const accessToken = session?.accessToken;
+    if (status !== "authenticated" || !accessToken) return;
 
     const controller = new AbortController();
     setIsLoading(true);
@@ -61,6 +66,8 @@ export const useAccountPlaylists = () => {
         if (!controller.signal.aborted) {
           setPlaylists(all);
           writeCache(all);
+          setNextPageToken(undefined);
+          sessionStorage.removeItem(TOKEN_KEY);
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -75,12 +82,65 @@ export const useAccountPlaylists = () => {
 
     loadPlaylists();
     return () => controller.abort();
-  }, [isLoaded, isSignedIn, accessToken]);
+  }, [status, session?.accessToken]);
+
+  const loadMore = async () => {
+    const accessToken = session?.accessToken;
+    if (!accessToken || !nextPageToken || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetchMyPlaylists(accessToken, nextPageToken);
+      const items: YTPlaylistItem[] = response.items ?? [];
+      const mapped = mapItems(items);
+      const updated = [...playlists, ...mapped];
+      setPlaylists(updated);
+      writeCache(updated);
+      const token = response.nextPageToken ?? undefined;
+      setNextPageToken(token);
+      if (token) sessionStorage.setItem(TOKEN_KEY, token);
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load more playlists",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAll = async () => {
+    const accessToken = session?.accessToken;
+    if (!accessToken || isLoading) return;
+    setIsLoading(true);
+    let cursor = nextPageToken;
+    const accumulated: PlaylistCardProps[] = [];
+    try {
+      while (cursor) {
+        const response = await fetchMyPlaylists(accessToken, cursor);
+        const items: YTPlaylistItem[] = response.items ?? [];
+        accumulated.push(...mapItems(items));
+        cursor = response.nextPageToken ?? undefined;
+      }
+      const updated = [...playlists, ...accumulated];
+      setPlaylists(updated);
+      writeCache(updated);
+      setNextPageToken(undefined);
+      sessionStorage.removeItem(TOKEN_KEY);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load playlists");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return {
     playlists,
     isLoading,
     error,
     status,
+    hasMore: !!nextPageToken,
+    loadMore,
+    fetchAll,
   };
 };
