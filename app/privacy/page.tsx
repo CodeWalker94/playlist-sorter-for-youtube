@@ -100,15 +100,16 @@ const PrivacyPage = () => {
         <p>
           We use{" "}
           <a
-            href="https://clerk.com/privacy"
+            href="https://next-auth.js.org"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Clerk
+            NextAuth.js
           </a>{" "}
-          for authentication. Clerk handles your sign-in securely and we do not
-          have access to your Google account password. You can review
-          Clerk&apos;s privacy policy at clerk.com/privacy.
+          for authentication and Google OAuth for sign-in. We do not have access
+          to your Google account password. Authentication tokens are stored
+          securely in an encrypted session cookie and never shared with third
+          parties.
         </p>
       </section>
 
